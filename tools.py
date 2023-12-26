@@ -23,7 +23,7 @@ class Button:
     def draw(self, screen):
         current_image = self.hover_image if self.is_hovered else self.image
         screen.blit(current_image, self.rect.topleft)
-        font = pygame.font.Font("fonts/rubber-biscuit.bold.ttf", 36)
+        font = pygame.font.Font("assets/fonts/rubber-biscuit.bold.ttf", 36)
         text_surface = font.render(self.text,True, (170, 0, 0))
         text_rect = text_surface.get_rect(center=self.rect.center)
         screen.blit(text_surface, text_rect)

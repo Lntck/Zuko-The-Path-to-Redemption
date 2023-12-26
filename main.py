@@ -6,9 +6,9 @@ from character import Character
 
 pygame.init()
 fps = 60
-menu_bg = pygame.image.load("images/Main_menu.jpeg")
-fightmap = pygame.image.load("images/fightmap1.jpeg")
-credits = pygame.image.load("images/credits.png")
+menu_bg = pygame.image.load("assets/images/Main_menu.jpeg")
+fightmap = pygame.image.load("assets/images/fightmap1.jpeg")
+credits = pygame.image.load("assets/images/credits.png")
 size = width, height = 900, 520
 screen = pygame.display.set_mode(size)
 current_scene = None
@@ -23,14 +23,14 @@ def switch_scene(scene):
 # Scene Main menu
 def main_menu():
     global current_scene
-    MainTheme = pygame.mixer.Sound("music/Main_lobby_theme.mp3")
+    MainTheme = pygame.mixer.Sound("assets/music/Main_lobby_theme.mp3")
     MainTheme.set_volume(0.1)
     MainTheme.play(-1)
-    play_button = Button(490, 35, 395, 86, "Play", "images/play_button.png", "images/activeplay_button.png", "music/clickbutton.mp3")
-    levels_button = Button(490, 120, 395, 86, "Levels", "images/play_button.png", "images/activeplay_button.png", "music/clickbutton.mp3")
-    settings_button = Button(490, 205, 395, 86, "Settings", "images/play_button.png", "images/activeplay_button.png", "music/clickbutton.mp3")
-    credits_button = Button(490, 290, 395, 86, "Credits", "images/play_button.png", "images/activeplay_button.png", "music/clickbutton.mp3")
-    exit_button = Button(490, 375, 395, 86, "Exit", "images/play_button.png", "images/activeplay_button.png", "music/clickbutton.mp3")
+    play_button = Button(490, 35, 395, 86, "Play", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
+    levels_button = Button(490, 120, 395, 86, "Levels", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
+    settings_button = Button(490, 205, 395, 86, "Settings", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
+    credits_button = Button(490, 290, 395, 86, "Credits", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
+    exit_button = Button(490, 375, 395, 86, "Exit", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
     clock = pygame.time.Clock()
     running = True
     while running:
@@ -74,13 +74,17 @@ def main_menu():
 
 # Scene fight
 def fight_scene():
-    hero = Character(180, 300, 100, 180, 6, "asdasd", "asdasd")
+    hero = Character(100, 300, 100, 180, 6, "character_image_path", "sprite_path")
+    target = Character(680, 300, 100, 180, 6, "character_image_path", "sprite_path")
     clock = pygame.time.Clock()
     running = True
     while running:
         clock.tick(fps)
-        hero.move()
         screen.blit(fightmap, (0, 0))
+        hero.move(screen, target)
+        hero.ball_group.update()
+        hero.ball_group.draw(screen)
+        # target.move(screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -89,11 +93,12 @@ def fight_scene():
                 running = False
                 switch_scene(main_menu)
         hero.draw(screen)
+        target.draw(screen)
         pygame.display.flip()
 
 # Scene credits
 def Credits_scene():
-    EndTheme = pygame.mixer.Sound("music/End_title_theme.mp3")
+    EndTheme = pygame.mixer.Sound("assets/music/End_title_theme.mp3")
     EndTheme.set_volume(0.1)
     EndTheme.play(-1)
     clock = pygame.time.Clock()
