@@ -1,0 +1,7 @@
+username	:	USER
+graphics level	:	Medium
+Resolution	:	900x500
+music	:	True
+sound	:	True
+difficulty	:	Hard
+Unlocked levels	:	1
