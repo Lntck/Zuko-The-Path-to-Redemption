@@ -2,7 +2,8 @@ import pygame
 
 
 class Character:
-    def __init__(self, x, y, width, height, speed, character_image_path, sprite_path):
+    def __init__(self, x, y, width, height, speed, character_image_path, sprite_path, size):
+        self.size = size
         self.x, self.y = x, y
         self.width, self.height = width, height
         self.character_image_path = character_image_path
@@ -50,15 +51,15 @@ class Character:
         
         self.height_y += gravity if self.height_y < self.jump_force else 0
 
-        if 0 <= self.character.x + dx <= 900 - self.width:
+        if 0 <= self.character.x + dx <= self.size[0] - self.width:
             self.character.x += dx
-        if 0 <= self.character.y + dy <= 520:
+        if 0 <= self.character.y + dy <= self.size[1]:
             self.character.y += dy
 
         if self.y + self.height >= self.character.y + self.height + self.height_y:
             self.character.y += self.height_y
 
-        if self.height_y >= self.jump_force and self.character.y == 300:
+        if self.height_y >= self.jump_force and self.character.y == int(self.size[1] * 0.58):
                 self.jump = False
         
         if self.character.x < target.character.x:
@@ -79,14 +80,15 @@ class Character:
             if kick.colliderect(target.character):
                 print('hit leg kick')
         elif self.attack_type == 3:
-            ball = Ball(self.character.x + self.width, self.character.y + self.height // 2, self.flip, pygame.image.load("assets/sprites/fireball.png"), target)
+            ball = Ball(self.character.x + self.width, self.character.y + self.height // 2, self.flip, pygame.image.load("assets/sprites/fireball.png"), target, self.size)
             self.ball_group.add(ball)
         self.attack_type = 0
 
 
 class Ball(pygame.sprite.Sprite):
-    def __init__(self, x, y, direction, img, target):
+    def __init__(self, x, y, direction, img, target, size):
         pygame.sprite.Sprite.__init__(self)
+        self.size = size
         self.direction = -1 if direction else 1
         self.target = target
         self.speed = 10
@@ -100,7 +102,7 @@ class Ball(pygame.sprite.Sprite):
         # move ball
         self.rect.x += (self.direction * self.speed)
         # if ball has gone off screen he died
-        if self.rect.right < 0 or self.rect.left > 900:
+        if self.rect.right < 0 or self.rect.left > self.size[0]:
             self.kill()
         
         if self.rect.colliderect(self.target.character):

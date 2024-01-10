@@ -1,17 +1,26 @@
 import os
 import sys
 import pygame
+import pygame_menu as pm
 from tools import Button
 from character import Character
 
+
+data = open("data/data.txt")
+Options = {i.split("	:	")[0]: i.split("	:	")[1] for i in data.read().split("\n")}
+User, Graphic, Resolution, Music, Sound, Difficulty, Levels = Options.values()
+data.close()
+
 pygame.init()
 fps = 60
-menu_bg = pygame.image.load("assets/images/Main_menu.jpeg")
-fightmap = pygame.image.load("assets/images/fightmap1.jpeg")
-credits = pygame.image.load("assets/images/credits.png")
-size = width, height = 900, 520
+size = width, height = tuple(map(int, Resolution.split("x")))
+menu_bg = pygame.transform.scale(pygame.image.load("assets/images/Main_menu.jpeg"), size)
+fightmap = pygame.transform.scale(pygame.image.load("assets/images/fightmap1.jpeg"), size)
+credits_bg = pygame.transform.scale(pygame.image.load("assets/images/credits.png"), size)
+settings_bg = pygame.transform.scale(pygame.image.load("assets/images/settings.jpg"), size)
 screen = pygame.display.set_mode(size)
 current_scene = None
+flag = False
 
 
 # Scene switching function
@@ -24,13 +33,13 @@ def switch_scene(scene):
 def main_menu():
     global current_scene
     MainTheme = pygame.mixer.Sound("assets/music/Main_lobby_theme.mp3")
-    MainTheme.set_volume(0.1)
+    MainTheme.set_volume((0.1 if bool(Music) else 0))
     MainTheme.play(-1)
-    play_button = Button(490, 35, 395, 86, "Play", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
-    levels_button = Button(490, 120, 395, 86, "Levels", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
-    settings_button = Button(490, 205, 395, 86, "Settings", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
-    credits_button = Button(490, 290, 395, 86, "Credits", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
-    exit_button = Button(490, 375, 395, 86, "Exit", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
+    play_button = Button(size[0] - 410, size[1]//14, 395, 86, "Play", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
+    levels_button = Button(size[0] - 410, size[1]//14 + 85, 395, 86, "Levels", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
+    settings_button = Button(size[0] - 410, size[1]//14 + 170, 395, 86, "Settings", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
+    credits_button = Button(size[0] - 410, size[1]//14 + 255, 395, 86, "Credits", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
+    exit_button = Button(size[0] - 410, size[1]//14 + 340, 395, 86, "Exit", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
     clock = pygame.time.Clock()
     running = True
     while running:
@@ -47,6 +56,10 @@ def main_menu():
                 running = False
                 MainTheme.stop()
                 switch_scene(Credits_scene)
+            if event.type == pygame.USEREVENT and event.button == settings_button:
+                running = False
+                MainTheme.stop()
+                switch_scene(Settings_scene)
             if event.type == pygame.USEREVENT and event.button == exit_button:
                 running = False
                 current_scene = None
@@ -74,8 +87,8 @@ def main_menu():
 
 # Scene fight
 def fight_scene():
-    hero = Character(100, 300, 100, 180, 6, "character_image_path", "sprite_path")
-    target = Character(680, 300, 100, 180, 6, "character_image_path", "sprite_path")
+    hero = Character(100, int(size[1] * 0.58), 100, 180, 6, "character_image_path", "sprite_path", size)
+    target = Character(size[0] - 200, int(size[1] * 0.58), 100, 180, 6, "character_image_path", "sprite_path", size)
     clock = pygame.time.Clock()
     running = True
     while running:
@@ -99,13 +112,13 @@ def fight_scene():
 # Scene credits
 def Credits_scene():
     EndTheme = pygame.mixer.Sound("assets/music/End_title_theme.mp3")
-    EndTheme.set_volume(0.1)
+    EndTheme.set_volume((0.1 if bool(Music) else 0))
     EndTheme.play(-1)
     clock = pygame.time.Clock()
     running = True
     while running:
         clock.tick(fps)
-        screen.blit(credits, (0, 0))
+        screen.blit(credits_bg, (0, 0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -114,6 +127,82 @@ def Credits_scene():
                 running = False
                 EndTheme.stop()
                 switch_scene(main_menu)
+        pygame.display.flip()
+
+# Scene settings
+def Settings_scene():
+    global flag
+    flag = False
+
+    def main_background() -> None:
+        background_image.draw(screen)
+
+    def SaveSettings():
+        with open("data/data.txt", 'w+') as f:
+            settingsData = settings.get_input_data()
+            s = "\n".join([f"{key}\t:\t{(settingsData[key][0][0] if type(settingsData[key]) == tuple else settingsData[key])}" for key in settingsData.keys()])
+            s += f"\nUnlocked levels	:	{Levels}"
+            f.write(s)
+
+    def disable() -> None:
+        global flag
+        flag = True
+        settings.disable()
+
+    EndTheme = pygame.mixer.Sound("assets/music/Settings_theme.mp3")
+    EndTheme.set_volume((0.1 if bool(Music) else 0))
+    EndTheme.play(-1)
+    clock = pygame.time.Clock()
+    running = True
+
+    graphics = [("Low", "low"),
+                ("Medium", "medium"),
+                ("High", "high")]
+    resolution = [("900x500", "900x500"),
+                  ("1280x720", "1280x720"),
+                  ("1600x900", "1600x900"),
+                  ("1920x1080", "1920x1080")]
+    difficulty = [("Easy", "Easy"),
+                  ("Medium", "Medium"),
+                  ("Hard", "Hard")]
+
+    background_image = pm.BaseImage(image_path=pm.baseimage.IMAGE_EXAMPLE_WALLPAPER)
+    theme_bg_image = pm.themes.THEME_ORANGE.copy()
+    theme_bg_image.background_color = pm.BaseImage(image_path="assets/images/settings.jpg")
+    theme_bg_image.widget_font = pygame.font.Font("assets/fonts/rubber-biscuit.bold.ttf", 30)
+    theme_bg_image.title_bar_style = pm.widgets.MENUBAR_STYLE_NONE
+    settings = pm.Menu(title="", width=size[0], height=size[1], theme=theme_bg_image)
+    settings.add.text_input(title="User Name / ", textinput_id="username", default=User)
+    settings.add.dropselect(title="Graphics Level", items=graphics, dropselect_id="graphics level", default="LMH".index(Graphic[0]))
+    settings.add.dropselect(title="Window Resolution", items=resolution, dropselect_id="Resolution", default="90121619".index(Resolution[:2])//2)
+
+    settings.add.toggle_switch(title="Music", default=bool(Music), toggleswitch_id="music")
+    settings.add.toggle_switch(title="Sounds", default=bool(Sound), toggleswitch_id="sound")
+
+    settings.add.selector(title="Difficulty\t", items=difficulty, selector_id="difficulty", default="EMH".index(Difficulty[0]))
+
+    settings.add.button(title="Apply Settings", action=SaveSettings)
+    settings.add.button(title="Reset Settings", action=settings.reset_value)
+
+    settings.add.button(title="Return To Main Menu", action=disable, align=pm.locals.ALIGN_CENTER)
+
+    while running:
+        clock.tick(fps)
+        screen.blit(settings_bg, (0, 0))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                switch_scene(None)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                running = False
+                EndTheme.stop()
+                switch_scene(main_menu)
+        if settings.is_enabled():
+            settings.mainloop(screen, main_background)
+        if not settings.is_enabled() and flag:
+            running = False
+            EndTheme.stop()
+            switch_scene(main_menu)
         pygame.display.flip()
 
 
