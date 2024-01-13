@@ -5,20 +5,31 @@ import pygame_menu as pm
 from tools import Button
 from character import Character
 
+pygame.init()
+
+clock = pygame.time.Clock()
+fps = 60
 
 data = open("data/data.txt")
 Options = {i.split("	:	")[0]: i.split("	:	")[1] for i in data.read().split("\n")}
 User, Graphic, Resolution, Music, Sound, Difficulty, Levels = Options.values()
 data.close()
 
-pygame.init()
-fps = 60
 size = width, height = tuple(map(int, Resolution.split("x")))
-menu_bg = pygame.transform.scale(pygame.image.load("assets/images/Main_menu.jpeg"), size)
-fightmap = pygame.transform.scale(pygame.image.load("assets/images/fightmap1.jpeg"), size)
-credits_bg = pygame.transform.scale(pygame.image.load("assets/images/credits.png"), size)
-settings_bg = pygame.transform.scale(pygame.image.load("assets/images/settings.jpg"), size)
 screen = pygame.display.set_mode(size)
+
+menu_bg = pygame.transform.scale(pygame.image.load("assets/images/Main_menu.jpeg").convert_alpha(), size)
+fightmap = pygame.transform.scale(pygame.image.load("assets/images/fightmap1.jpeg").convert_alpha(), size)
+credits_bg = pygame.transform.scale(pygame.image.load("assets/images/credits.png").convert_alpha(), size)
+settings_bg = pygame.transform.scale(pygame.image.load("assets/images/settings.jpg").convert_alpha(), size)
+
+Zuko_sheet = pygame.image.load("assets/sprites/Zuko_1.png").convert_alpha()
+Zhao_sheet = pygame.image.load("assets/sprites/Zhao.png").convert_alpha()
+fireball = (pygame.image.load("assets/sprites/fireball1.png").convert_alpha(), pygame.image.load("assets/sprites/fireball2.png").convert_alpha())
+
+ZUKO_ANIMATION = [2, 2, 1, 2, 2, 3, 1, 2]
+ZHAO_ANIMATION = [2, 2, 1, 2, 2, 3, 1, 2]
+
 current_scene = None
 flag = False
 
@@ -40,7 +51,6 @@ def main_menu():
     settings_button = Button(size[0] - 410, size[1]//14 + 170, 395, 86, "Settings", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
     credits_button = Button(size[0] - 410, size[1]//14 + 255, 395, 86, "Credits", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
     exit_button = Button(size[0] - 410, size[1]//14 + 340, 395, 86, "Exit", "assets/images/play_button.png", "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
-    clock = pygame.time.Clock()
     running = True
     while running:
         screen.blit(menu_bg, (0, 0))
@@ -87,14 +97,14 @@ def main_menu():
 
 # Scene fight
 def fight_scene():
-    hero = Character(100, int(size[1] * 0.58), 100, 180, 6, "character_image_path", "sprite_path", size)
-    target = Character(size[0] - 200, int(size[1] * 0.58), 100, 180, 6, "character_image_path", "sprite_path", size)
+    hero = Character(100, int(size[1] * 0.58), 100, 180, 6, False, Zuko_sheet, fireball, ZUKO_ANIMATION, "")
+    target = Character(size[0] - 200, int(size[1] * 0.58), 100, 180, 6, True, Zhao_sheet, fireball, ZHAO_ANIMATION, "")
     clock = pygame.time.Clock()
     running = True
     while running:
         clock.tick(fps)
         screen.blit(fightmap, (0, 0))
-        hero.move(screen, target)
+        hero.move(screen, target, size)
         hero.ball_group.update()
         hero.ball_group.draw(screen)
         # target.move(screen)
@@ -105,9 +115,12 @@ def fight_scene():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 running = False
                 switch_scene(main_menu)
+        hero.update()
+        target.update()
         hero.draw(screen)
         target.draw(screen)
         pygame.display.flip()
+
 
 # Scene credits
 def Credits_scene():
@@ -128,6 +141,7 @@ def Credits_scene():
                 EndTheme.stop()
                 switch_scene(main_menu)
         pygame.display.flip()
+
 
 # Scene settings
 def Settings_scene():
