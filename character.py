@@ -1,13 +1,15 @@
 import pygame
+import random
 
 
 class Character:
-    def __init__(self, x, y, width, height, speed, flip, sprite_sheet, ball, animation, sound):
+    def __init__(self, x, y, width, height, speed, health, flip, sprite_sheet, ball, animation, sound):
         self.x, self.y = x, y
         self.width, self.height = width, height
         self.character = pygame.Rect((x, y, width, height))
         self.animation_list = self.load_images(sprite_sheet, animation)
         self.action = 0
+        self.sound_list = sound
         self.update_time = pygame.time.get_ticks()
         self.frame_index = 0
         self.image = self.animation_list[self.action][self.frame_index]
@@ -21,7 +23,7 @@ class Character:
         self.attacking = False
         self.attack_cooldown = 0
         self.hit = False
-        self.health = 200
+        self.health = health
         self.alive = True
         self.flip = flip
         self.ball_group = pygame.sprite.Group()
@@ -82,37 +84,67 @@ class Character:
     def draw(self, screen):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.character.x - 64, self.character.y - 40))
     
-    def move(self, screen, target, size):
+    def move(self, screen, target, size, AI=False):
         gravity = 2
         dx = 0
         dy = 0
         self.running = False
         self.attack_type = 0
-        if not self.attacking:
-            # movement <- | ->
-            if pygame.key.get_pressed()[pygame.K_a]:
-                self.running = True
-                dx = -self.speed
-            if pygame.key.get_pressed()[pygame.K_d]:
-                self.running = True
-                dx = self.speed
-            # jump 
-            if pygame.key.get_pressed()[pygame.K_w] and not self.jump:
-                self.height_y = -self.jump_force
-                self.jump = True
-            # attack
-            # hand strike
-            if pygame.key.get_pressed()[pygame.K_j]:
-                self.attack_type = 1
-                self.attack(screen, target, size)
-            # kick leg
-            if pygame.key.get_pressed()[pygame.K_k]:
-                self.attack_type = 2
-                self.attack(screen, target, size)
-            # (fire/water/air) ball
-            if pygame.key.get_pressed()[pygame.K_l]:
-                self.attack_type = 3
-                self.attack(screen, target, size)
+        if not AI:
+            if not self.attacking and self.alive:
+                # movement <- | ->
+                if pygame.key.get_pressed()[pygame.K_a]:
+                    self.running = True
+                    dx = -self.speed
+                if pygame.key.get_pressed()[pygame.K_d]:
+                    self.running = True
+                    dx = self.speed
+                # jump
+                if pygame.key.get_pressed()[pygame.K_w] and not self.jump:
+                    self.height_y = -self.jump_force
+                    self.sound_list[0].play()
+                    self.jump = True
+                # attack
+                # hand strike
+                if pygame.key.get_pressed()[pygame.K_j]:
+                    self.attack_type = 1
+                    self.attack(screen, target, size)
+                # kick leg
+                if pygame.key.get_pressed()[pygame.K_k]:
+                    self.attack_type = 2
+                    self.attack(screen, target, size)
+                # (fire/water/air) ball
+                if pygame.key.get_pressed()[pygame.K_l]:
+                    self.attack_type = 3
+                    self.attack(screen, target, size)
+        else:
+            if not self.attacking and self.alive:
+                # movement <- | ->
+                if self.character.x + random.choice((300, 10)) > target.character.x:
+                    self.running = True
+                    dx = -self.speed
+                elif self.character.x - random.choice((300, 10)) < target.character.x:
+                    self.running = True
+                    dx = self.speed
+                # jump
+                jump_rand = random.random()
+                if jump_rand < 0.01 and not self.jump:
+                    self.height_y = -self.jump_force
+                    self.sound_list[0].play()
+                    self.jump = True
+                # attack
+                # hand strike
+                if target.character.x - 150 < self.character.x < target.character.x + 150 and random.random() > 0.9:
+                    self.attack_type = 1
+                    self.attack(screen, target, size)
+                # kick leg
+                elif target.character.x - 50 < self.character.x < target.character.x + 50 and random.random() > 0.1:
+                    self.attack_type = 2
+                    self.attack(screen, target, size)
+                # (fire/water/air) ball
+                if random.random() < 0.01:
+                    self.attack_type = 3
+                    self.attack(screen, target, size)
         
         self.height_y += gravity if self.height_y < self.jump_force else 0
 
@@ -138,20 +170,23 @@ class Character:
         if not self.attack_cooldown:
             self.attacking = True
             if self.attack_type == 1:
+                self.sound_list[1].play()
                 strike = pygame.Rect((self.character.x + self.width) - (2 * self.width * self.flip), self.character.y, self.width, self.height // 3)
                 # pygame.draw.rect(screen, (255, 0, 0), strike)
                 if strike.colliderect(target.character):
                     target.hit = True
-                    target.health -= 30
+                    target.health -= 8
                     print('hit hand strike')
             elif self.attack_type == 2:
+                self.sound_list[2].play()
                 kick = pygame.Rect((self.character.x + self.width) - (2 * self.width * self.flip), self.character.y + self.height * 0.4, self.width, self.height * 0.6)
                 # pygame.draw.rect(screen, (255, 0, 0), kick)
                 if kick.colliderect(target.character):
                     target.hit = True
-                    target.health -= 30
+                    target.health -= 9
                     print('hit leg kick')
             elif self.attack_type == 3:
+                self.sound_list[-1].play()
                 ball = Ball(self.character.x + self.width, self.character.y + self.height // 3.2, self.flip, self.ball, target, size)
                 self.ball_group.add(ball)
 
@@ -179,7 +214,7 @@ class Ball(pygame.sprite.Sprite):
         
         if self.rect.colliderect(self.target.character):
             self.target.hit = True
-            self.target.health -= 40
+            self.target.health -= 19
             print("ball HIT")
             self.kill()
 
