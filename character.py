@@ -142,7 +142,7 @@ class Character:
                     self.attack_type = 2
                     self.attack(screen, target, size)
                 # (fire/water/air) ball
-                if random.random() < 0.01:
+                if random.random() < 0.04:
                     self.attack_type = 3
                     self.attack(screen, target, size)
         

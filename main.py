@@ -19,7 +19,8 @@ screen = pygame.display.set_mode(size)
 
 menu_bg = pygame.transform.scale(pygame.image.load("assets/images/Main_menu.jpeg").convert_alpha(), size)
 levels_bg = pygame.transform.scale(pygame.image.load("assets/images/levels.jpeg").convert_alpha(), size)
-fightmap = pygame.transform.scale(pygame.image.load("assets/images/fightmap1.jpeg").convert_alpha(), size)
+fightmap1 = pygame.transform.scale(pygame.image.load("assets/images/fightmap1.jpeg").convert_alpha(), size)
+fightmap2 = pygame.transform.scale(pygame.image.load("assets/images/fightmap2.jpg").convert_alpha(), size)
 credits_bg = pygame.transform.scale(pygame.image.load("assets/images/credits.png").convert_alpha(), size)
 window_bg = pygame.transform.scale(pygame.image.load("assets/images/settings.jpg").convert_alpha(), size)
 
@@ -28,12 +29,18 @@ Hero_health = 100
 Target_health = 100
 
 Zuko_sheet = pygame.image.load("assets/sprites/Zuko_1.png").convert_alpha()
+Zuko_sheet_2 = pygame.image.load("assets/sprites/Zuko_2.png").convert_alpha()
 Zhao_sheet = pygame.image.load("assets/sprites/Zhao.png").convert_alpha()
+Aang_sheet = pygame.image.load("assets/sprites/Aang.png").convert_alpha()
 fireball = (pygame.image.load("assets/sprites/fireball1.png").convert_alpha(),
             pygame.image.load("assets/sprites/fireball2.png").convert_alpha())
+airball = (pygame.image.load("assets/sprites/airball1.png").convert_alpha(),
+            pygame.image.load("assets/sprites/airball2.png").convert_alpha())
 
 Zuko_healthbar = pygame.image.load("assets/sprites/Zuko_healthbar.png").convert_alpha()
 Zhao_healthbar = pygame.image.load("assets/sprites/Zhao_healthbar.png").convert_alpha()
+Zuko_healthbar_2 = pygame.image.load("assets/sprites/Zuko_2_healthbar.png").convert_alpha()
+Aang_healthbar = pygame.image.load("assets/sprites/Aang_healthbar.png").convert_alpha()
 
 ZUKO_ANIMATION = [2, 2, 1, 2, 2, 3, 1, 2]
 ZHAO_ANIMATION = [2, 2, 1, 2, 2, 3, 1, 2]
@@ -58,6 +65,10 @@ Agnikai_fight = pygame.mixer.Sound("assets/music/Agnikai_fight.mp3")
 Agnikai_fight.set_volume((0.45 if bool(Music) else 0))
 Agnikai_cutscene = pygame.mixer.Sound("assets/music/Agnikai_cutscene.mp3")
 Agnikai_cutscene.set_volume((0.45 if bool(Music) else 0))
+fight2 = pygame.mixer.Sound("assets/music/fight2.mp3")
+fight2.set_volume((0.45 if bool(Music) else 0))
+Crossroads_cutscene = pygame.mixer.Sound("assets/music/Crossroads_cutscene.mp3")
+Crossroads_cutscene.set_volume((0.45 if bool(Music) else 0))
 
 current_scene = None
 
@@ -74,13 +85,12 @@ def draw_healthbar(health, x, y, img, flip, scale):
     screen.blit(pygame.transform.scale(pygame.transform.flip(img, flip, False).convert_alpha(), (img.get_width() * scale, img.get_height() * scale)), (x, y))
 
 
-def draw_video(video, scene, sound):
+def draw_video(video, scene, sound, fps_video):
     cap = cv2.VideoCapture(video)
     ret, frame = cap.read()
     img = cv2.transpose(cv2.resize(frame, size))
     surface = pygame.surface.Surface((img.shape[0], img.shape[1]))
     clock2 = pygame.time.Clock()
-    fps_video = 24
     sound.play()
     run = True
     while run:
@@ -130,7 +140,7 @@ def main_menu():
             if event.type == pygame.USEREVENT and event.button == play_button:
                 running = False
                 MainTheme.stop()
-                draw_video("assets/videos/First_agnikai.mp4", fight_scene1, Agnikai_cutscene)
+                draw_video("assets/videos/First_agnikai.mp4", fight_scene1, Agnikai_cutscene, fps_video=24)
             if event.type == pygame.USEREVENT and event.button == levels_button:
                 running = False
                 MainTheme.stop()
@@ -194,11 +204,11 @@ def levels_scene():
             if event.type == pygame.USEREVENT and event.button == first_level:
                 running = False
                 LevelsTheme.stop()
-                draw_video("assets/videos/First_agnikai.mp4", fight_scene1, Agnikai_cutscene)
-            if event.type == pygame.USEREVENT and event.button == second_level:
+                draw_video("assets/videos/First_agnikai.mp4", fight_scene1, Agnikai_cutscene, fps_video=24)
+            if event.type == pygame.USEREVENT and event.button == second_level and len(Levels) > 1:
                 running = False
                 LevelsTheme.stop()
-                # draw_video("assets/videos/First_agnikai.mp4", fight_scene2, Agnikai_cutscene)
+                draw_video("assets/videos/Crossroads_of_fate.mp4", fight_scene2, Crossroads_cutscene, fps_video=30)
             first_level.handle_event(event)
             second_level.handle_event(event)
             # third_level.handle_event(event)
@@ -214,9 +224,10 @@ def levels_scene():
         pygame.display.flip()
 
 
-# Scene fight
+# Scene First Fight
 def fight_scene1():
     global Winner, Hero_health, Target_health
+    Winner = 0
     Hero_health = 100
     Target_health = 100
     Agnikai_fight.play(-1)
@@ -230,7 +241,7 @@ def fight_scene1():
     while running:
         clock.tick(fps)
 
-        screen.blit(fightmap, (0, 0))
+        screen.blit(fightmap1, (0, 0))
         draw_healthbar(hero.health, 20, 0, Zuko_healthbar, True, 2.5)
         draw_healthbar(target.health, size[0] - 235, 0, Zhao_healthbar, False, 2.5)
 
@@ -262,7 +273,58 @@ def fight_scene1():
         pygame.display.flip()
 
 
+# Scene Second Fight
+def fight_scene2():
+    global Winner, Hero_health, Target_health
+    Winner = 0
+    Hero_health = 100
+    Target_health = 100
+    fight2.play(-1)
+    hero = Character(100, int(size[1] * 0.58), 100, 180, 6, Hero_health, False, Zuko_sheet_2, fireball, ZUKO_ANIMATION,
+                     sound_list)
+    target = Character(size[0] - 200, int(size[1] * 0.58), 100, 180, 6, Target_health, True, Aang_sheet, airball,
+                       ZHAO_ANIMATION, sound_list)
+    clock = pygame.time.Clock()
+    running = True
+    cooldown_death = 100
+    while running:
+        clock.tick(fps)
+
+        screen.blit(fightmap2, (0, 0))
+        draw_healthbar(hero.health, 20, 0, Zuko_healthbar_2, True, 2.5)
+        draw_healthbar(target.health, size[0] - 235, 0, Aang_healthbar, False, 2.5)
+
+        hero.move(screen, target, size)
+        hero.ball_group.update()
+        hero.ball_group.draw(screen)
+        target.move(screen, hero, size, AI=True)
+        target.ball_group.update()
+        target.ball_group.draw(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                switch_scene(None)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                running = False
+                fight2.stop()
+                switch_scene(main_menu)
+        hero.update()
+        target.update()
+        hero.draw(screen)
+        target.draw(screen)
+        Winner = check_win(hero, target)
+        cooldown_death = cooldown_death - 1 if Winner else cooldown_death
+        if Winner and not cooldown_death:
+            running = False
+            fight2.stop()
+            Hero_health, Target_health = hero.health, target.health
+            switch_scene(winner_scene)
+        pygame.display.flip()
+
+
 def winner_scene():
+    global Levels
+    Levels = Levels + "2" if len(Levels) == 1 else (Levels + "3" if len(Levels) == 2 else Levels)
     back_to_menu = Button(size[0] // 2 - window_bg.get_width() * 0.28, size[1] // 1.9, 250, 50, "Back to menu", 20,
                           "black", "assets/images/play_button.png",
                           "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
@@ -295,6 +357,12 @@ def winner_scene():
             if event.type == pygame.USEREVENT and event.button == restart:
                 running = False
                 switch_scene(fight_scene1)
+            if event.type == pygame.USEREVENT and event.button == next_level:
+                running = False
+                if len(Levels) > 1:
+                    draw_video("assets/videos/Crossroads_of_fate.mp4", fight_scene2, Crossroads_cutscene, fps_video=30)
+                else:
+                    switch_scene(main_menu)
             back_to_menu.handle_event(event)
             restart.handle_event(event)
             next_level.handle_event(event)
@@ -387,4 +455,11 @@ def settings_scene():
 switch_scene(main_menu)
 while current_scene is not None:
     current_scene()
+
+with open("data/data.txt", 'r') as f:
+    data = f.read().split("\n")
+with open("data/data.txt", 'w+') as f:
+    data[-1] = f"Unlocked levels	:	{Levels}"
+    f.write("\n".join(data))
+
 pygame.quit()

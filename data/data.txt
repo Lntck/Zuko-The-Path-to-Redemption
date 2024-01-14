@@ -4,4 +4,4 @@ Resolution	:	900x500
 music	:	True
 sound	:	True
 difficulty	:	Easy
-Unlocked levels	:	1
+Unlocked levels	:	12
