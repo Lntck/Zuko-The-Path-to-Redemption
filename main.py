@@ -71,6 +71,7 @@ Crossroads_cutscene = pygame.mixer.Sound("assets/music/Crossroads_cutscene.mp3")
 Crossroads_cutscene.set_volume((0.45 if bool(Music) else 0))
 
 current_scene = None
+current_fight = None
 
 
 # Scene switching function
@@ -226,7 +227,8 @@ def levels_scene():
 
 # Scene First Fight
 def fight_scene1():
-    global Winner, Hero_health, Target_health
+    global Winner, Hero_health, Target_health, current_fight
+    current_fight = fight_scene1
     Winner = 0
     Hero_health = 100
     Target_health = 100
@@ -275,7 +277,8 @@ def fight_scene1():
 
 # Scene Second Fight
 def fight_scene2():
-    global Winner, Hero_health, Target_health
+    global Winner, Hero_health, Target_health, current_fight
+    current_fight = fight_scene2
     Winner = 0
     Hero_health = 100
     Target_health = 100
@@ -324,7 +327,7 @@ def fight_scene2():
 
 def winner_scene():
     global Levels
-    Levels = Levels + "2" if len(Levels) == 1 else (Levels + "3" if len(Levels) == 2 else Levels)
+    Levels = Levels + "2" if len(Levels) == 1 and Winner == 1 else (Levels + "3" if len(Levels) == 2 and Winner == 1 else Levels)
     back_to_menu = Button(size[0] // 2 - window_bg.get_width() * 0.28, size[1] // 1.9, 250, 50, "Back to menu", 20,
                           "black", "assets/images/play_button.png",
                           "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
@@ -356,7 +359,7 @@ def winner_scene():
                 switch_scene(main_menu)
             if event.type == pygame.USEREVENT and event.button == restart:
                 running = False
-                switch_scene(fight_scene1)
+                switch_scene(current_fight)
             if event.type == pygame.USEREVENT and event.button == next_level:
                 running = False
                 if len(Levels) > 1:
