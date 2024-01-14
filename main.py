@@ -18,6 +18,7 @@ size = width, height = tuple(map(int, Resolution.split("x")))
 screen = pygame.display.set_mode(size)
 
 menu_bg = pygame.transform.scale(pygame.image.load("assets/images/Main_menu.jpeg").convert_alpha(), size)
+levels_bg = pygame.transform.scale(pygame.image.load("assets/images/levels.jpeg").convert_alpha(), size)
 fightmap = pygame.transform.scale(pygame.image.load("assets/images/fightmap1.jpeg").convert_alpha(), size)
 credits_bg = pygame.transform.scale(pygame.image.load("assets/images/credits.png").convert_alpha(), size)
 window_bg = pygame.transform.scale(pygame.image.load("assets/images/settings.jpg").convert_alpha(), size)
@@ -47,6 +48,8 @@ sound_list = [jump_fx, hand_fx, leg_fx, fireball_fx]
 
 MainTheme = pygame.mixer.Sound("assets/music/Main_lobby_theme.mp3")
 MainTheme.set_volume((0.1 if bool(Music) else 0))
+LevelsTheme = pygame.mixer.Sound("assets/music/Levels_theme.mp3")
+LevelsTheme.set_volume((0.1 if bool(Music) else 0))
 SettingsTheme = pygame.mixer.Sound("assets/music/Settings_theme.mp3")
 SettingsTheme.set_volume((0.1 if bool(Music) else 0))
 EndTheme = pygame.mixer.Sound("assets/music/End_title_theme.mp3")
@@ -127,7 +130,11 @@ def main_menu():
             if event.type == pygame.USEREVENT and event.button == play_button:
                 running = False
                 MainTheme.stop()
-                draw_video("assets/videos/First_agnikai.mp4", fight_scene, Agnikai_cutscene)
+                draw_video("assets/videos/First_agnikai.mp4", fight_scene1, Agnikai_cutscene)
+            if event.type == pygame.USEREVENT and event.button == levels_button:
+                running = False
+                MainTheme.stop()
+                switch_scene(levels_scene)
             if event.type == pygame.USEREVENT and event.button == credits_button:
                 running = False
                 MainTheme.stop()
@@ -161,8 +168,54 @@ def main_menu():
         clock.tick(fps)
 
 
+# Scene Levels
+def levels_scene():
+    first_level = Button(size[0] * 0.13, size[1] * 0.11, 330, 210, "", 36, 'black',
+                         "assets/images/first_btn.png", "assets/images/first_btn_active.png",
+                         "assets/music/clickbutton.mp3")
+    second_level = Button(size[0] * 0.55, size[1] * 0.15, 300, 200, "", 36, 'black',
+                         "assets/images/second_btn.png", "assets/images/second_btn_active.png",
+                         "assets/music/clickbutton.mp3")
+    third_level = Button(size[0] * 0.336, size[1] * 0.54, 300, 200, "", 36, 'black',
+                          "assets/images/third_btn.png", "assets/images/third_btn_active.png",
+                          "assets/music/clickbutton.mp3")
+    LevelsTheme.play(-1)
+    running = True
+    while running:
+        screen.blit(levels_bg, (0, 0))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                switch_scene(None)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                running = False
+                LevelsTheme.stop()
+                switch_scene(main_menu)
+            if event.type == pygame.USEREVENT and event.button == first_level:
+                running = False
+                LevelsTheme.stop()
+                draw_video("assets/videos/First_agnikai.mp4", fight_scene1, Agnikai_cutscene)
+            if event.type == pygame.USEREVENT and event.button == second_level:
+                running = False
+                LevelsTheme.stop()
+                # draw_video("assets/videos/First_agnikai.mp4", fight_scene2, Agnikai_cutscene)
+            first_level.handle_event(event)
+            second_level.handle_event(event)
+            # third_level.handle_event(event)
+
+        first_level.check_hover(pygame.mouse.get_pos())
+        first_level.draw(screen)
+
+        second_level.check_hover(pygame.mouse.get_pos())
+        second_level.draw(screen)
+
+        third_level.check_hover(pygame.mouse.get_pos())
+        third_level.draw(screen)
+        pygame.display.flip()
+
+
 # Scene fight
-def fight_scene():
+def fight_scene1():
     global Winner, Hero_health, Target_health
     Hero_health = 100
     Target_health = 100
@@ -210,13 +263,13 @@ def fight_scene():
 
 
 def winner_scene():
-    Back_to_menu = Button(size[0] // 2 - window_bg.get_width() * 0.28, size[1] // 1.9, 250, 50, "Back to menu", 20,
+    back_to_menu = Button(size[0] // 2 - window_bg.get_width() * 0.28, size[1] // 1.9, 250, 50, "Back to menu", 20,
                           "black", "assets/images/play_button.png",
                           "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
-    Restart = Button(size[0] // 1.98, size[1] // 1.9, 250, 50, "Restart", 20,
+    restart = Button(size[0] // 1.98, size[1] // 1.9, 250, 50, "Restart", 20,
                           "black", "assets/images/play_button.png",
                           "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
-    Next_level = Button(size[0] // 2 - window_bg.get_width() * 0.14, size[1] // 1.58, 250, 50, "Next level", 20,
+    next_level = Button(size[0] // 2 - window_bg.get_width() * 0.14, size[1] // 1.58, 250, 50, "Next level", 20,
                           "black", "assets/images/play_button.png",
                           "assets/images/activeplay_button.png", "assets/music/clickbutton.mp3")
     running = True
@@ -226,9 +279,9 @@ def winner_scene():
                     (size[0] // 2 - window_bg.get_width() * 0.3, size[1] // 2 - window_bg.get_width() * 0.15))
         font = pygame.font.Font("assets/fonts/rubber-biscuit.bold.ttf", 36)
         text = font.render(f"Victory" if Winner == 1 else f"Defeat", True, 'black')
-        Points = font.render(f"Points/ {Hero_health * 9}", True, 'black')
+        points = font.render(f"Points/ {Hero_health * 9}", True, 'black')
         screen.blit(text, (size[0] // 2 - window_bg.get_width() * 0.08, size[1] // 2 - window_bg.get_width() * 0.1))
-        screen.blit(Points, (size[0] // 2 - window_bg.get_width() * 0.13, size[1] // 2 - window_bg.get_width() * 0.05))
+        screen.blit(points, (size[0] // 2 - window_bg.get_width() * 0.13, size[1] // 2 - window_bg.get_width() * 0.05))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -236,25 +289,25 @@ def winner_scene():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 running = False
                 switch_scene(main_menu)
-            if event.type == pygame.USEREVENT and event.button == Back_to_menu:
+            if event.type == pygame.USEREVENT and event.button == back_to_menu:
                 running = False
                 switch_scene(main_menu)
-            if event.type == pygame.USEREVENT and event.button == Restart:
+            if event.type == pygame.USEREVENT and event.button == restart:
                 running = False
-                switch_scene(fight_scene)
-            Back_to_menu.handle_event(event)
-            Restart.handle_event(event)
-            Next_level.handle_event(event)
+                switch_scene(fight_scene1)
+            back_to_menu.handle_event(event)
+            restart.handle_event(event)
+            next_level.handle_event(event)
 
-        Back_to_menu.check_hover(pygame.mouse.get_pos())
-        Back_to_menu.draw(screen)
+        back_to_menu.check_hover(pygame.mouse.get_pos())
+        back_to_menu.draw(screen)
 
-        Restart.check_hover(pygame.mouse.get_pos())
-        Restart.draw(screen)
+        restart.check_hover(pygame.mouse.get_pos())
+        restart.draw(screen)
 
         if Winner == 1:
-            Next_level.check_hover(pygame.mouse.get_pos())
-            Next_level.draw(screen)
+            next_level.check_hover(pygame.mouse.get_pos())
+            next_level.draw(screen)
         pygame.display.flip()
 
 
@@ -283,7 +336,7 @@ def settings_scene():
     def main_background() -> None:
         background_image.draw(screen)
 
-    def SaveSettings():
+    def save():
         with open("data/data.txt", 'w+') as f:
             settings_data = settings.get_input_data()
             s = "\n".join([f"{key}\t:\t{(settings_data[key][0][0] if type(settings_data[key]) == tuple else settings_data[key])}" for key in settings_data.keys()])
@@ -319,7 +372,7 @@ def settings_scene():
 
     settings.add.selector(title="Difficulty\t", items=difficulty, selector_id="difficulty", default="EMH".index(Difficulty[0]))
 
-    settings.add.button(title="Apply Settings", action=SaveSettings)
+    settings.add.button(title="Apply Settings", action=save)
     settings.add.button(title="Reset Settings", action=settings.reset_value)
 
     settings.add.button(title="Return To Main Menu", action=disable, align=pm.locals.ALIGN_CENTER)
