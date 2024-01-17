@@ -15,7 +15,7 @@ class Button:
         self.hover_image = self.image
         if hover_image_path:
             self.hover_image = pygame.image.load(hover_image_path)
-            self.hover_image = pygame.transform. scale (self.hover_image, (width, height))
+            self.hover_image = pygame.transform.scale(self.hover_image, (width, height))
         self.rect = self.image.get_rect(topleft=(x, y))
         self.sound = None
         if sound_path:

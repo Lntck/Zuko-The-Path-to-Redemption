@@ -1,6 +1,6 @@
 import pygame
 import pygame_menu as pm
-from tools import Button
+from button import Button
 from character import Character
 import cv2
 
