@@ -2,7 +2,7 @@ import pygame
 import pygame_menu as pm
 from button import Button
 from character import Character
-import cv2
+from video import Video
 
 pygame.init()
 
@@ -63,12 +63,15 @@ EndTheme = pygame.mixer.Sound("assets/music/End_title_theme.mp3")
 EndTheme.set_volume((0.1 if bool(Music) else 0))
 Agnikai_fight = pygame.mixer.Sound("assets/music/Agnikai_fight.mp3")
 Agnikai_fight.set_volume((0.45 if bool(Music) else 0))
-Agnikai_cutscene = pygame.mixer.Sound("assets/music/Agnikai_cutscene.mp3")
-Agnikai_cutscene.set_volume((0.45 if bool(Music) else 0))
+Agnikai_cutscene_sound = pygame.mixer.Sound("assets/music/Agnikai_cutscene.mp3")
+Agnikai_cutscene_sound.set_volume((0.45 if bool(Music) else 0))
 fight2 = pygame.mixer.Sound("assets/music/fight2.mp3")
 fight2.set_volume((0.45 if bool(Music) else 0))
-Crossroads_cutscene = pygame.mixer.Sound("assets/music/Crossroads_cutscene.mp3")
-Crossroads_cutscene.set_volume((0.45 if bool(Music) else 0))
+Crossroads_cutscene_sound = pygame.mixer.Sound("assets/music/Crossroads_cutscene.mp3")
+Crossroads_cutscene_sound.set_volume((0.45 if bool(Music) else 0))
+
+Cutscene_1 = Video("assets/videos/First_agnikai.mp4", Agnikai_cutscene_sound, 24, screen, size)
+Cutscene_2 = Video("assets/videos/Crossroads_of_fate.mp4", Crossroads_cutscene_sound, 30, screen, size)
 
 current_scene = None
 current_fight = None
@@ -81,45 +84,12 @@ def switch_scene(scene):
 
 
 def draw_healthbar(health, x, y, img, flip, scale):
-    k = health / 100
-    pygame.draw.rect(screen, "Green", pygame.Rect(x + (58 if flip else 18), y + 50, (img.get_width() * scale - 75) * k, img.get_height() * scale - 50))
+    pygame.draw.rect(screen, "Green", pygame.Rect(x + (58 if flip else 18), y + 50, (img.get_width() * scale - 75) * health / 100, img.get_height() * scale - 50))
     screen.blit(pygame.transform.scale(pygame.transform.flip(img, flip, False).convert_alpha(), (img.get_width() * scale, img.get_height() * scale)), (x, y))
 
 
-def draw_video(video, scene, sound, fps_video):
-    cap = cv2.VideoCapture(video)
-    ret, frame = cap.read()
-    img = cv2.transpose(cv2.resize(frame, size))
-    surface = pygame.surface.Surface((img.shape[0], img.shape[1]))
-    clock2 = pygame.time.Clock()
-    sound.play()
-    run = True
-    while run:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-                pygame.quit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                run = False
-                sound.stop()
-                switch_scene(scene)
-        ret, frame = cap.read()
-        if not ret:
-            break
-        img = cv2.cvtColor(cv2.transpose(cv2.resize(frame, size)), cv2.COLOR_BGR2RGB)
-        pygame.surfarray.blit_array(surface, img)
-        screen.blit(surface, (0, 0))
-        pygame.display.flip()
-        clock2.tick(fps_video)
-    switch_scene(scene)
-
-
 def check_win(hero, target):
-    if target.health <= 0:
-        return 1
-    elif hero.health <= 0:
-        return 2
-    return 0
+    return 1 if target.health <= 0 else (2 if hero.health <= 0 else 0)
 
 
 # Scene Main menu
@@ -141,7 +111,8 @@ def main_menu():
             if event.type == pygame.USEREVENT and event.button == play_button:
                 running = False
                 MainTheme.stop()
-                draw_video("assets/videos/First_agnikai.mp4", fight_scene1, Agnikai_cutscene, fps_video=24)
+                Cutscene_1.play()
+                switch_scene(fight_scene1)
             if event.type == pygame.USEREVENT and event.button == levels_button:
                 running = False
                 MainTheme.stop()
@@ -205,11 +176,13 @@ def levels_scene():
             if event.type == pygame.USEREVENT and event.button == first_level:
                 running = False
                 LevelsTheme.stop()
-                draw_video("assets/videos/First_agnikai.mp4", fight_scene1, Agnikai_cutscene, fps_video=24)
+                Cutscene_1.play()
+                switch_scene(fight_scene1)
             if event.type == pygame.USEREVENT and event.button == second_level and len(Levels) > 1:
                 running = False
                 LevelsTheme.stop()
-                draw_video("assets/videos/Crossroads_of_fate.mp4", fight_scene2, Crossroads_cutscene, fps_video=30)
+                Cutscene_2.play()
+                switch_scene(fight_scene2)
             first_level.handle_event(event)
             second_level.handle_event(event)
             # third_level.handle_event(event)
@@ -342,11 +315,14 @@ def winner_scene():
         clock.tick(fps)
         screen.blit(pygame.transform.scale(window_bg, (window_bg.get_width() * 0.6, window_bg.get_height() * 0.6)),
                     (size[0] // 2 - window_bg.get_width() * 0.3, size[1] // 2 - window_bg.get_width() * 0.15))
+
         font = pygame.font.Font("assets/fonts/rubber-biscuit.bold.ttf", 36)
         text = font.render(f"Victory" if Winner == 1 else f"Defeat", True, 'black')
         points = font.render(f"Points/ {Hero_health * 9}", True, 'black')
+
         screen.blit(text, (size[0] // 2 - window_bg.get_width() * 0.08, size[1] // 2 - window_bg.get_width() * 0.1))
         screen.blit(points, (size[0] // 2 - window_bg.get_width() * 0.13, size[1] // 2 - window_bg.get_width() * 0.05))
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -363,7 +339,8 @@ def winner_scene():
             if event.type == pygame.USEREVENT and event.button == next_level:
                 running = False
                 if len(Levels) > 1:
-                    draw_video("assets/videos/Crossroads_of_fate.mp4", fight_scene2, Crossroads_cutscene, fps_video=30)
+                    Cutscene_2.play()
+                    switch_scene(fight_scene2)
                 else:
                     switch_scene(main_menu)
             back_to_menu.handle_event(event)
