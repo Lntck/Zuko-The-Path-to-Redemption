@@ -57,7 +57,7 @@ class Character:
             self.update_action(1)
         else:
             self.update_action(0)
-        cooldown = 200
+        cooldown = 150
         self.image = self.animation_list[self.action][self.frame_index]
         if pygame.time.get_ticks() - self.update_time > cooldown:
             self.update_time = pygame.time.get_ticks()
@@ -83,8 +83,8 @@ class Character:
 
     def draw(self, screen):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.character.x - 64, self.character.y - 40))
-    
-    def move(self, screen, target, size, AI=False):
+
+    def move(self, target, size, AI=False):
         gravity = 2
         dx = 0
         dy = 0
@@ -104,19 +104,18 @@ class Character:
                     self.height_y = -self.jump_force
                     self.sound_list[0].play()
                     self.jump = True
-                # attack
                 # hand strike
                 if pygame.key.get_pressed()[pygame.K_j]:
                     self.attack_type = 1
-                    self.attack(screen, target, size)
+                    self.attack(target, size)
                 # kick leg
                 if pygame.key.get_pressed()[pygame.K_k]:
                     self.attack_type = 2
-                    self.attack(screen, target, size)
+                    self.attack(target, size)
                 # (fire/water/air) ball
                 if pygame.key.get_pressed()[pygame.K_l]:
                     self.attack_type = 3
-                    self.attack(screen, target, size)
+                    self.attack(target, size)
         else:
             if not self.attacking and self.alive:
                 # movement <- | ->
@@ -136,16 +135,16 @@ class Character:
                 # hand strike
                 if target.character.x - 150 < self.character.x < target.character.x + 150 and random.random() > 0.9:
                     self.attack_type = 1
-                    self.attack(screen, target, size)
+                    self.attack(target, size)
                 # kick leg
                 elif target.character.x - 50 < self.character.x < target.character.x + 50 and random.random() > 0.1:
                     self.attack_type = 2
-                    self.attack(screen, target, size)
+                    self.attack(target, size)
                 # (fire/water/air) ball
-                if random.random() < 0.04:
+                if random.random() < 0.025:
                     self.attack_type = 3
-                    self.attack(screen, target, size)
-        
+                    self.attack(target, size)
+
         self.height_y += gravity if self.height_y < self.jump_force else 0
 
         if 0 <= self.character.x + dx <= size[0] - self.width:
@@ -165,14 +164,13 @@ class Character:
             self.flip = False
         else:
             self.flip = True
-    
-    def attack(self, screen, target, size):
+
+    def attack(self, target, size):
         if not self.attack_cooldown:
             self.attacking = True
             if self.attack_type == 1:
                 self.sound_list[1].play()
                 strike = pygame.Rect((self.character.x + self.width) - (2 * self.width * self.flip), self.character.y, self.width, self.height // 3)
-                # pygame.draw.rect(screen, (255, 0, 0), strike)
                 if strike.colliderect(target.character):
                     target.hit = True
                     target.health -= 8
@@ -180,7 +178,6 @@ class Character:
             elif self.attack_type == 2:
                 self.sound_list[2].play()
                 kick = pygame.Rect((self.character.x + self.width) - (2 * self.width * self.flip), self.character.y + self.height * 0.4, self.width, self.height * 0.6)
-                # pygame.draw.rect(screen, (255, 0, 0), kick)
                 if kick.colliderect(target.character):
                     target.hit = True
                     target.health -= 9
@@ -211,10 +208,10 @@ class Ball(pygame.sprite.Sprite):
         self.rect.x += (self.direction * self.speed)
         if self.rect.right < 0 or self.rect.left > self.size[0]:
             self.kill()
-        
+
         if self.rect.colliderect(self.target.character):
             self.target.hit = True
-            self.target.health -= 19
+            self.target.health -= 10
             print("ball HIT")
             self.kill()
 
