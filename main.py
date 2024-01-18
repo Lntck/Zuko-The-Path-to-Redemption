@@ -88,7 +88,8 @@ class Game:
         self.screen.blit(pygame.transform.scale(pygame.transform.flip(img, flip, False).convert_alpha(), (img.get_width() * scale, img.get_height() * scale)), (x, y))
 
     # Winner check
-    def check_win(self, hero, target):
+    @staticmethod
+    def check_win(hero, target):
         return 1 if target.health <= 0 else (2 if hero.health <= 0 else 0)
 
     # Scene Main menu
