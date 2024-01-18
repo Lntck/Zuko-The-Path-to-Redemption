@@ -5,3 +5,5 @@ The project "Zuko: The Path to Redemption" is a PyGame game based on the plot of
 ### Dependencies for installation:
 - Python >= 3.10
 - `pip install -r requirements.txt`
+## Demo Video
+<img src="assets/videos/demo.gif" width="720" height="422"/>
